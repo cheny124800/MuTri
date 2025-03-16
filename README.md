@@ -56,7 +56,10 @@ If our paper is useful for your research, please cite:
 
 
 
-## Implementation reference
-[TransPro](https://github.com/ustlsh/TransPro)
+###### :rocket: Implementation reference
+  - https://github.com/ustlsh/TransPro
 
-[CycleGAN and pix2pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix)
+
+###### :rocket: Contact us
+  - 1248013830@qq.com
+
