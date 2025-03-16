@@ -55,11 +55,10 @@ python test.py --dataroot ./octa-500/OCT2OCTA3M_3D --name transpro_3M --test_nam
 If our paper is useful for your research, please cite:
 
 
-
-###### :rocket: Implementation reference
+## :rocket: Implementation reference
   - https://github.com/ustlsh/TransPro
 
 
-###### :rocket: Contact us
+## &ensp; :smile: Feel free to contact us
   - 1248013830@qq.com
 
