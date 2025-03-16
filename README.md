@@ -11,8 +11,8 @@ conda activate octa
 ```
 - Clone this repo:
 ```
-git clone https://github.com/ustlsh/TransPro
-cd TransPro
+git clone https://github.com/cheny124800/MuTri.git
+cd MuTri
 ```
 - Install requirements:
 ```
