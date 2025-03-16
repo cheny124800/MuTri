@@ -22,41 +22,6 @@ import math
 
 
 
-class WKD():
-    def __init__(self,wkd_level=4, wkd_basis='haar'):
-        self.xfm = DWTForward(J=wkd_level , mode='zero',wave=wkd_basis).cuda()
-    
-    def get_wavelet_loss(self, student, teacher):
-            student_l, student_h = self.xfm(student)
-            teacher_l, teacher_h = self.xfm(teacher)
-            loss = 0.0
-            for index in range(len(student_h)):
-                loss+= torch.nn.functional.l1_loss(teacher_h[index], student_h[index])
-            return loss
-
-cross_entropy_loss = torch.nn.CrossEntropyLoss()
-def PatchNCELoss(f_q, f_k, tau=0.07):
-    # batch size, channel size, and number of sample locations
-    B, C, S = f_q.shape
-
-    # calculate v * v+: BxSx1
-    l_pos = (f_k * f_q).sum(dim=1)[:, :, None]
-
-    # calculate v * v-: BxSxS
-    l_neg = torch.bmm(f_q.transpose(1, 2), f_k)
-
-    # The diagonal entries are not negatives. Remove them.
-    identity_matrix = torch.eye(S)[None, :, :]
-    l_neg.masked_fill_(identity_matrix.cuda().bool(), -float('inf'))
-
-    # calculate logits: (B)x(S)x(S+1)
-    logits = torch.cat((l_pos, l_neg), dim=2) / tau
-
-    # return PatchNCE loss
-    predictions = logits.flatten(0, 1)
-    targets = torch.zeros(B * S, dtype=torch.long).cuda()
-    return cross_entropy_loss(predictions, targets)
-
 class Embed(nn.Module):
     """Embedding module"""
     def __init__(self, dim_in=1024, dim_out=128):
@@ -260,18 +225,19 @@ print("Expid:",Expid)
 
 
 OCT_proj = MultiProjector().to(device)
-OCT_KD_proj = MultiProjector().to(device)
+OCT_Pre_proj = MultiProjector().to(device)
 OCTA_Q_proj = MultiProjector().to(device)
-OCTA_KD_Q_proj = MultiProjector().to(device)
+OCTA_Pre_Q_proj = MultiProjector().to(device)
 
-params = itertools.chain(model.parameters(), OCT_proj.parameters(), OCT_KD_proj.parameters(), OCTA_Q_proj.parameters(), OCTA_KD_Q_proj.parameters()) 
+params = itertools.chain(model.parameters(), OCT_proj.parameters(), OCT_Pre_proj.parameters(), OCTA_Q_proj.parameters(), OCTA_Pre_Q_proj.parameters()) 
 optimizer = optim.Adam(params, lr=lr) 
 
-OCT_path = 'xxx'  
+OCT_path = ''
 model_OCT.load_state_dict(torch.load(OCT_path)) 
 
-OCTA_path = 'xxx'
+OCTA_path = ''
 model_OCTA.load_state_dict(torch.load(OCTA_path)) 
+
 
 scheduler_type = "cycle"
 #scheduler_type = "LRFinder"
@@ -331,7 +297,7 @@ for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):
         total_steps += opt.batch_size
         epoch_iter += opt.batch_size
         model.zero_grad()
-        out,_, latent_loss,OCT_Fea,OCTA_QuanFea = model(train_data_A,KD =True)
+        out,_, latent_loss,OCT_Fea,OCTA_QuanFea = model(train_data_A,Pre =True)
         recon_loss = criterion(out, train_data_B)
         latent_loss = latent_loss.mean()
         mutual_contrastive_loss_OCTA = 0.0 
@@ -341,51 +307,51 @@ for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):
 
 
         with torch.no_grad():
-            _,_,_,KD_OCT_Fea,_ = model_OCT(train_data_A,KD =True)    
-            Output_OCTA_KD,_,_,_,KD_OCTA_QuanFea = model_OCTA(train_data_B,KD =True)   
-            KD_proj = torch.mean(Output_OCTA_KD,4)
-            #KD_proj = Norm(KD_proj) ## Norm 
+            _,_,_,Pre_OCT_Fea,_ = model_OCT(train_data_A,Pre =True)    
+            Output_OCTA_Pre,_,_,_,Pre_OCTA_QuanFea = model_OCTA(train_data_B,Pre =True)   
+            Pre_proj = torch.mean(Output_OCTA_Pre,4)
+            #Pre_proj = Norm(Pre_proj) ## Norm 
 
         Proj_OCT_Fea = []
-        Proj_KD_OCT_Fea = []
+        Proj_Pre_OCT_Fea = []
         Proj_OCTA_QuanFea = []
-        Proj_KD_OCTA_QuanFea = []
+        Proj_Pre_OCTA_QuanFea = []
         for ind in range(4): 
             Cur_OCT_Fea = rearrange(OCT_Fea[ind], 'b c (h p1) (w p2) z -> (b h w) c p1 p2 z', p1= Patch_list[ind] , p2= Patch_list[ind])
-            Cur_KD_OCT_Fea = rearrange(KD_OCT_Fea[ind], 'b c (h p1) (w p2) z -> (b h w) c p1 p2 z', p1= Patch_list[ind] , p2= Patch_list[ind])
+            Cur_Pre_OCT_Fea = rearrange(Pre_OCT_Fea[ind], 'b c (h p1) (w p2) z -> (b h w) c p1 p2 z', p1= Patch_list[ind] , p2= Patch_list[ind])
             Cur_OCTA_QuanFea = rearrange(OCTA_QuanFea[ind], 'b c (h p1) (w p2) z -> (b h w) c p1 p2 z', p1= Patch_list[ind] , p2= Patch_list[ind])
-            Cur_KD_OCTA_QuanFea = rearrange(KD_OCTA_QuanFea[ind], 'b c (h p1) (w p2) z -> (b h w) c p1 p2 z', p1= Patch_list[ind] , p2= Patch_list[ind])
+            Cur_Pre_OCTA_QuanFea = rearrange(Pre_OCTA_QuanFea[ind], 'b c (h p1) (w p2) z -> (b h w) c p1 p2 z', p1= Patch_list[ind] , p2= Patch_list[ind])
 
             Cur_OCT_Fea = F.adaptive_avg_pool3d(Cur_OCT_Fea,(1, 1, 1)).view(Patch_Num, -1)
-            Cur_KD_OCT_Fea = F.adaptive_avg_pool3d(Cur_KD_OCT_Fea,(1, 1, 1)).view(Patch_Num, -1)
+            Cur_Pre_OCT_Fea = F.adaptive_avg_pool3d(Cur_Pre_OCT_Fea,(1, 1, 1)).view(Patch_Num, -1)
             Cur_OCTA_QuanFea = F.adaptive_avg_pool3d(Cur_OCTA_QuanFea,(1, 1, 1)).view(Patch_Num, -1)
-            Cur_KD_OCTA_QuanFea = F.adaptive_avg_pool3d(Cur_KD_OCTA_QuanFea,(1, 1, 1)).view(Patch_Num, -1) 
+            Cur_Pre_OCTA_QuanFea = F.adaptive_avg_pool3d(Cur_Pre_OCTA_QuanFea,(1, 1, 1)).view(Patch_Num, -1) 
 
             Proj_OCT_Fea.append(Cur_OCT_Fea)
-            Proj_KD_OCT_Fea.append(Cur_KD_OCT_Fea)
+            Proj_Pre_OCT_Fea.append(Cur_Pre_OCT_Fea)
             Proj_OCTA_QuanFea.append(Cur_OCTA_QuanFea)
-            Proj_KD_OCTA_QuanFea.append(Cur_KD_OCTA_QuanFea)
+            Proj_Pre_OCTA_QuanFea.append(Cur_Pre_OCTA_QuanFea)
 
         Proj_OCT_Fea = OCT_proj(Proj_OCT_Fea)
-        Proj_KD_OCT_Fea = OCT_KD_proj(Proj_KD_OCT_Fea)
+        Proj_Pre_OCT_Fea = OCT_Pre_proj(Proj_Pre_OCT_Fea)
         Proj_OCTA_QuanFea = OCTA_Q_proj(Proj_OCTA_QuanFea)
-        Proj_KD_OCTA_QuanFea = OCTA_KD_Q_proj(Proj_KD_OCTA_QuanFea)    
+        Proj_Pre_OCTA_QuanFea = OCTA_Pre_Q_proj(Proj_Pre_OCTA_QuanFea)    
 
         loss_sim_proj = 0
 
         _proj = torch.mean(out,4)
         #_proj = Norm(_proj)  ## Norm  
-        patch_proj_KD = rearrange(KD_proj, 'b c (h p1) (w p2)  -> (b h w) c p1 p2 ', p1= Patch_list[0] , p2= Patch_list[0])
+        patch_proj_Pre = rearrange(Pre_proj, 'b c (h p1) (w p2)  -> (b h w) c p1 p2 ', p1= Patch_list[0] , p2= Patch_list[0])
         patch_proj  = rearrange(_proj, 'b c (h p1) (w p2) -> (b h w) c p1 p2 ', p1= Patch_list[0] , p2= Patch_list[0])  
 
 
-        patch_proj_KD = patch_proj_KD.view(Patch_Num, -1)
+        patch_proj_Pre = patch_proj_Pre.view(Patch_Num, -1)
         patch_proj = patch_proj.view(Patch_Num, -1)
 
 
         sim_consis_loss_proj= 0.0
         bases = patch_proj
-        base_KD =patch_proj_KD
+        base_Pre =patch_proj_Pre
         k, c = bases.size()
         loss_sim_proj = 0
         num = 0
@@ -395,17 +361,17 @@ for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):
                 simi = F.cosine_similarity(bases[i].unsqueeze(0), bases[j].unsqueeze(0).detach(), dim=1)
                 simi = F.relu(simi)
 
-                simi_KD = F.cosine_similarity(base_KD[i].unsqueeze(0), base_KD[j].unsqueeze(0).detach(), dim=1)
-                simi_KD = F.relu(simi_KD)
+                simi_Pre = F.cosine_similarity(base_Pre[i].unsqueeze(0), base_Pre[j].unsqueeze(0).detach(), dim=1)
+                simi_Pre= F.relu(simi_Pre)
 
-                loss_sim_proj += criterionL1(simi,simi_KD)       
+                loss_sim_proj += criterionL1(simi,simi_Pre)       
 
         sim_consis_loss_proj =  (loss_sim_proj/num)
 
         mutual_contrastive_loss_OCTA = 0.0 
         for ind in range(4):
             embeddings_a = Proj_OCTA_QuanFea[ind]
-            embeddings_b = Proj_KD_OCTA_QuanFea[ind]
+            embeddings_b = Proj_Pre_OCTA_QuanFea[ind]
 
             diag_mask = torch.ones([Patch_Num,Patch_Num]).cuda()
             intra_mask = torch.eye(Patch_Num).cuda() 
@@ -423,7 +389,7 @@ for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):
         mutual_contrastive_loss_OCT  = 0.0   
         for ind in range(4):
             embeddings_a = Proj_OCT_Fea[ind] 
-            embeddings_b = Proj_KD_OCT_Fea[ind] 
+            embeddings_b = Proj_Pre_OCT_Fea[ind] 
 
 
             diag_mask = torch.ones([Patch_Num,Patch_Num]).cuda() 

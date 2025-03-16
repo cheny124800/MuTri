@@ -162,7 +162,7 @@ class VQVAE(nn.Module):
 
         #self.Adapter = MultiAdapter_New() 
 
-    def forward(self, imgs, info=None, KD =False):
+    def forward(self, imgs, info=None, Pre =False):
         encoded_images = self.encoder(imgs)
         x_lis = []
         loss = []
@@ -179,7 +179,7 @@ class VQVAE(nn.Module):
         decoded_images = self.decoder(x_lis)
         q_loss = loss[0] + loss[1] + loss[2] + loss[3]
         
-        if KD == False:
+        if Pre == False:
             return decoded_images, codebook_indices, q_loss
         else:
             return decoded_images, codebook_indices, q_loss,encoded_images, x_lis
