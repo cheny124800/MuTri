@@ -267,10 +267,10 @@ OCTA_KD_Q_proj = MultiProjector().to(device)
 params = itertools.chain(model.parameters(), OCT_proj.parameters(), OCT_KD_proj.parameters(), OCTA_Q_proj.parameters(), OCTA_KD_Q_proj.parameters()) 
 optimizer = optim.Adam(params, lr=lr) 
 
-OCT_path = '/home/eezzchen/TransPro/checkpoints/transpro_A_6M/best_net_A.pth'
+OCT_path = 'xxx'  
 model_OCT.load_state_dict(torch.load(OCT_path)) 
 
-OCTA_path = '/home/eezzchen/TransPro/checkpoints/transpro_B_6m/best_net_B.pth'
+OCTA_path = 'xxx'
 model_OCTA.load_state_dict(torch.load(OCTA_path)) 
 
 scheduler_type = "cycle"
