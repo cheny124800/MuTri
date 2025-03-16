@@ -1,4 +1,4 @@
-This repository contains the official PyTorch implementation of the following paper:
+This repository contains the PyTorch implementation of the following paper:
 
 **MuTri: Multi-view Tri-alignment for OCT to OCTA 3D Image Translation**
 
