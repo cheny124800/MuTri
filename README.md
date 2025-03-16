@@ -59,6 +59,6 @@ If our paper is useful for your research, please cite:
   - https://github.com/ustlsh/TransPro
 
 
-## &ensp; :smile: Feel free to contact us
+## :smile: Feel free to contact us
   - 1248013830@qq.com
 
