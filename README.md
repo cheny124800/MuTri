@@ -22,10 +22,11 @@ pip install -r requirements.txt
 
 ## Usage
 ### Data preparation
-We use OCTA-3M and OCTA-6M datasets in our paper. 
+We use OCTA-3M, OCTA-6M, and OCTA2024 datasets in our paper. 
 
-These two datasets are from [OCTA-500](https://ieee-dataport.org/open-access/octa-500)
+The OCTA-3M amd OCTA-6M datasets are from [OCTA-500](https://ieee-dataport.org/open-access/octa-500)
 
+Please contact us for the access of OCTA2024 datasets with research purpose only
 
 ### Train 
 - To view training results and loss plots, please run:

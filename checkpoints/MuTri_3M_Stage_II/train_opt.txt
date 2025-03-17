@@ -1,0 +1,71 @@
+----------------- Options ---------------
+                    alpha: 1.0                           
+               batch_size: 1                             
+                    beta1: 0.5                           
+          checkpoints_dir: ./checkpoints                 
+           continue_train: False                         
+             criterionHCG: L1                            
+             criterionVPG: L1                            
+                crop_size: 256                           
+                 dataroot: /home/eezzchen/OCT2OCTA3M_3D  	[default: None]
+             dataset_mode: alignedoct2octa3d             	[default: unaligned]
+               depth_size: 256                           
+                direction: AtoB                          
+              display_env: main                          
+             display_freq: 1                             
+               display_id: 1                             
+            display_ncols: 6                             
+             display_port: 6031                          	[default: 8097]
+           display_server: http://localhost              
+          display_winsize: 256                           
+                    epoch: latest                        
+              epoch_count: 1                             
+                 gan_mode: lsgan                         
+                  gpu_ids: 0                             
+                init_gain: 0.02                          
+                init_type: normal                        
+                 input_nc: 1                             	[default: 3]
+                  isTrain: True                          	[default: None]
+                 lambda_A: 10.0                          
+                 lambda_C: 5.0                           	[default: 10.0]
+                load_iter: 0                             	[default: 0]
+                load_size: 304                           	[default: 286]
+                       lr: 0.0002                        
+           lr_decay_iters: 50                            
+                lr_policy: linear                        
+         max_dataset_size: inf                           
+                    model: MuTri                         	[default: cycle_gan]
+                 n_epochs: 1600                          
+           n_epochs_decay: 1600                          
+               n_layers_D: 3                             
+                     name: MuTri_3M_Stage_II             	[default: experiment_name]
+                      ndf: 64                            
+                     netD: basic                         
+                     netG: unet_256                      	[default: resnet_9blocks]
+                      ngf: 64                            
+               no_dropout: False                         
+                  no_flip: True                          	[default: False]
+                  no_html: False                         
+                 no_lsgan: False                         
+                     norm: batch                         	[default: instance]
+              num_threads: 4                             
+                output_nc: 1                             	[default: 3]
+                    phase: train                         
+                pool_size: 0                             	[default: 50]
+               preprocess: resize_and_crop               
+               print_freq: 100                           
+           resize_or_crop: resize_and_crop               
+             save_by_iter: False                         
+          save_epoch_freq: 5                             
+         save_latest_freq: 5000                          
+                     seed: 20                            
+           serial_batches: False                         
+                   suffix:                               
+                test_name: experiment_name               
+         update_html_freq: 1000                          
+                use_wandb: False                         
+           val_epoch_freq: 1                             
+                  verbose: False                         
+       wandb_project_name: CycleGAN-and-pix2pix          
+              which_epoch: latest                        
+----------------- End -------------------
