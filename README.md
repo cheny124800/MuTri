@@ -26,7 +26,7 @@ We use OCTA-3M, OCTA-6M, and OCTA2024 datasets in our paper.
 
 The OCTA-3M amd OCTA-6M datasets are from [OCTA-500](https://ieee-dataport.org/open-access/octa-500)
 
-Please contact us for the access of OCTA2024 datasets with research purpose only
+Please contact us for the access of OCTA2024 dataset with research purpose only
 
 ### Train 
 - To view training results and loss plots, please run:
