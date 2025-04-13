@@ -16,7 +16,7 @@ import random
 import torch.nn.functional as F
 import loralib as lora
 import os
-import itertools
+import itertools  
 from einops import rearrange, reduce, repeat
 import math
 
@@ -344,10 +344,8 @@ for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):
         patch_proj_Pre = rearrange(Pre_proj, 'b c (h p1) (w p2)  -> (b h w) c p1 p2 ', p1= Patch_list[0] , p2= Patch_list[0])
         patch_proj  = rearrange(_proj, 'b c (h p1) (w p2) -> (b h w) c p1 p2 ', p1= Patch_list[0] , p2= Patch_list[0])  
 
-
         patch_proj_Pre = patch_proj_Pre.view(Patch_Num, -1)
         patch_proj = patch_proj.view(Patch_Num, -1)
-
 
         sim_consis_loss_proj= 0.0
         bases = patch_proj
@@ -368,45 +366,15 @@ for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):
 
         sim_consis_loss_proj =  (loss_sim_proj/num)
 
+        
+        #****Coming Soon****# 
+        #****This loss is still in progress for the journal version****# 
         mutual_contrastive_loss_OCTA = 0.0 
-        for ind in range(4):
-            embeddings_a = Proj_OCTA_QuanFea[ind]
-            embeddings_b = Proj_Pre_OCTA_QuanFea[ind]
-
-            diag_mask = torch.ones([Patch_Num,Patch_Num]).cuda()
-            intra_mask = torch.eye(Patch_Num).cuda() 
-
-            logit = torch.div(torch.mm(embeddings_b.detach().clone(), embeddings_a.T),tau) 
-
-            log_prob = logit - torch.log((torch.exp(logit) * diag_mask).sum(1, keepdim=True))
-            mean_log_prob_pos = (intra_mask * log_prob).sum(1) / intra_mask.sum(1)
-            icl_loss = - mean_log_prob_pos.mean()
-            mutual_contrastive_loss_OCTA = mutual_contrastive_loss_OCTA + icl_loss*0.08
-
-        mutual_contrastive_loss_OCTA = mutual_contrastive_loss_OCTA * 0.25 
-
-
         mutual_contrastive_loss_OCT  = 0.0   
-        for ind in range(4):
-            embeddings_a = Proj_OCT_Fea[ind] 
-            embeddings_b = Proj_Pre_OCT_Fea[ind] 
-
-
-            diag_mask = torch.ones([Patch_Num,Patch_Num]).cuda() 
-            intra_mask = torch.eye(Patch_Num).cuda() 
-
-            logit = torch.div(torch.mm(embeddings_b.detach().clone(), embeddings_a.T),tau) 
-
-            log_prob = logit - torch.log((torch.exp(logit) * diag_mask).sum(1, keepdim=True))
-            mean_log_prob_pos = (intra_mask * log_prob).sum(1) / intra_mask.sum(1)
-            icl_loss = - mean_log_prob_pos.mean()
-            mutual_contrastive_loss_OCT = mutual_contrastive_loss_OCT +  icl_loss**0.08
-
-        mutual_contrastive_loss_OCT = mutual_contrastive_loss_OCT * 0.25 
 
 
         loss = recon_loss + latent_loss_weight * latent_loss +(mutual_contrastive_loss_OCT + mutual_contrastive_loss_OCTA   + sim_consis_loss_proj )*Weight
-
+        loss.backward()
         cur_mae = MAE_(out.detach().cpu().numpy(),train_data_B.cpu().numpy())
         Train_MAE += cur_mae
         Train_num += 1
@@ -468,10 +436,4 @@ for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):
                 print("saving best...")
 
     print('End of epoch %d / %d \t Time Taken: %d sec' %
-          (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
-
-
-    # Fixed learning rate  or change to unfixed learning rate
-    if epoch > opt.n_epochs:
-       model.update_learning_rate()
-
+          (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time)) 
